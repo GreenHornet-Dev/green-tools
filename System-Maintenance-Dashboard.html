@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Tools - System Maintenance Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #4ade80;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+            margin-bottom: 5px;
+        }
+        .header p { color: #9ca3af; font-size: 1em; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(74, 222, 128, 0.15);
+        }
+        .card h2 {
+            color: #4ade80;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card h2 span { font-size: 1.4em; }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9em;
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #9ca3af; }
+        .stat-value { color: #e0e0e0; font-weight: 500; }
+        .stat-value.good { color: #4ade80; }
+        .stat-value.warn { color: #fbbf24; }
+        .stat-value.bad { color: #f87171; }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #0f3460;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-top: 12px;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #4ade80;
+            color: #4ade80;
+        }
+        .command-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            color: #4ade80;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .badge-green { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+        .badge-yellow { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #4b5563;
+            font-size: 0.8em;
+        }
+        .footer a { color: #4ade80; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>&#127807; Green Tools</h1>
+    <p>System Maintenance Dashboard &bull; <span id="currentTime"></span></p>
+</div>
+
+<div class="grid">
+
+    <!-- Quick Start -->
+    <div class="card">
+        <h2><span>&#9889;</span> Quick Start</h2>
+        <p style="color:#9ca3af;font-size:0.85em;margin-bottom:10px;">Install Green Tools with one command in PowerShell (Admin):</p>
+        <div class="command-box" onclick="copyToClipboard(this)">iex (iwr -uri "https://raw.githubusercontent.com/GreenHornet-Dev/green-tools/main/Install-GreenTools-BOOTSTRAP.ps1" -UseBasicParsing).Content</div>
+        <button class="btn" onclick="copyBootstrap()">&#128203; Copy Install Command</button>
+    </div>
+
+    <!-- Tools Available -->
+    <div class="card">
+        <h2><span>&#128736;</span> Available Tools</h2>
+        <div class="stat-row">
+            <span class="stat-label">Launch-Green-Tools.ps1</span>
+            <span class="stat-value good">Main Menu</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">System-Update-Debloat.ps1</span>
+            <span class="stat-value good">Updates</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">App-Scanner-Interactive.ps1</span>
+            <span class="stat-value good">App Scan</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Install-Office365-Modules.ps1</span>
+            <span class="stat-value good">M365</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Office365-Examples.ps1</span>
+            <span class="stat-value good">Examples</span>
+        </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="card">
+        <h2><span>&#128187;</span> System Info</h2>
+        <div class="stat-row">
+            <span class="stat-label">Platform</span>
+            <span class="stat-value" id="platform">Detecting...</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Browser</span>
+            <span class="stat-value" id="browser">Detecting...</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Screen</span>
+            <span class="stat-value" id="screen">Detecting...</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Online</span>
+            <span class="stat-value good" id="online">Checking...</span>
+        </div>
+    </div>
+
+    <!-- Links -->
+    <div class="card">
+        <h2><span>&#128279;</span> Resources</h2>
+        <div class="stat-row">
+            <span class="stat-label">GitHub Repository</span>
+            <span class="stat-value"><a href="https://github.com/GreenHornet-Dev/green-tools" target="_blank" style="color:#4ade80;">green-tools</a></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Raw Scripts</span>
+            <span class="stat-value"><a href="https://github.com/GreenHornet-Dev/green-tools/tree/main" target="_blank" style="color:#4ade80;">Browse Files</a></span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">Microsoft Graph Docs</span>
+            <span class="stat-value"><a href="https://docs.microsoft.com/en-us/graph/" target="_blank" style="color:#4ade80;">docs.microsoft.com</a></span>
+        </div>
+        <button class="btn btn-outline" onclick="window.open('https://github.com/GreenHornet-Dev/green-tools','_blank')">&#128279; Open on GitHub</button>
+    </div>
+
+</div>
+
+<div class="footer">
+    Green Tools &bull; <a href="https://github.com/GreenHornet-Dev/green-tools" target="_blank">github.com/GreenHornet-Dev/green-tools</a>
+</div>
+
+<script>
+    // Update time
+    function updateTime() {
+        document.getElementById('currentTime').textContent = new Date().toLocaleString();
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Detect system info
+    document.getElementById('platform').textContent = navigator.platform || 'Unknown';
+    document.getElementById('screen').textContent = screen.width + 'x' + screen.height;
+    document.getElementById('online').textContent = navigator.onLine ? 'Connected' : 'Offline';
+    document.getElementById('online').className = 'stat-value ' + (navigator.onLine ? 'good' : 'bad');
+
+    const ua = navigator.userAgent;
+    let browser = 'Unknown';
+    if (ua.includes('Chrome')) browser = 'Chrome';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+    else if (ua.includes('Edge')) browser = 'Edge';
+    else if (ua.includes('Safari')) browser = 'Safari';
+    document.getElementById('browser').textContent = browser;
+
+    // Copy functions
+    function copyBootstrap() {
+        const cmd = `iex (iwr -uri "https://raw.githubusercontent.com/GreenHornet-Dev/green-tools/main/Install-GreenTools-BOOTSTRAP.ps1" -UseBasicParsing).Content`;
+        navigator.clipboard.writeText(cmd).then(() => alert('Bootstrap command copied to clipboard!'));
+    }
+
+    function copyToClipboard(el) {
+        navigator.clipboard.writeText(el.textContent).then(() => {
+            el.style.background = 'rgba(74,222,128,0.1)';
+            setTimeout(() => el.style.background = '', 1000);
+        });
+    }
+</script>
+
+</body>
+</html>
