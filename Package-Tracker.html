@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Tools - Package Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #4ade80;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+            margin-bottom: 5px;
+        }
+        .header p { color: #9ca3af; font-size: 1em; }
+
+        .container { max-width: 920px; margin: 0 auto; }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 222, 128, 0.1);
+        }
+        .card h2 {
+            color: #4ade80;
+            font-size: 1.1em;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card h2 span.icon { font-size: 1.3em; }
+
+        /* ── Tracking input ── */
+        .track-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .track-input {
+            flex: 1;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: #e0e0e0;
+            font-size: 1.05em;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            letter-spacing: 0.04em;
+            transition: border-color 0.2s;
+        }
+        .track-input:focus { border-color: #4ade80; }
+        .track-input::placeholder { color: #374151; letter-spacing: 0; font-family: 'Segoe UI', sans-serif; }
+
+        .btn-track {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #0f3460;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 26px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn-track:hover { opacity: 0.85; }
+        .btn-track:active { transform: scale(0.97); }
+
+        /* ── Carrier detection ── */
+        .detect-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            min-height: 28px;
+        }
+        .detect-label { color: #9ca3af; font-size: 0.83em; }
+
+        .carrier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 11px;
+            border-radius: 20px;
+            font-size: 0.83em;
+            font-weight: 700;
+        }
+        .badge-ups     { background: rgba(180,83,9,0.2);   color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); }
+        .badge-usps    { background: rgba(0,75,135,0.25);  color: #60a5fa; border: 1px solid rgba(96,165,250,0.35); }
+        .badge-fedex   { background: rgba(109,40,217,0.2); color: #c084fc; border: 1px solid rgba(192,132,252,0.35); }
+        .badge-dhl     { background: rgba(202,138,4,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.35); }
+        .badge-amazon  { background: rgba(234,88,12,0.15); color: #fb923c; border: 1px solid rgba(251,146,60,0.35); }
+        .badge-airways { background: rgba(14,165,233,0.15);color: #38bdf8; border: 1px solid rgba(56,189,248,0.35); }
+        .badge-unknown { background: rgba(75,85,99,0.2);   color: #9ca3af; border: 1px solid rgba(156,163,175,0.25); }
+
+        /* ── Label input ── */
+        .label-row { display: flex; gap: 10px; margin-bottom: 18px; }
+        .label-input {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            font-size: 0.88em;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .label-input:focus { border-color: rgba(74,222,128,0.45); }
+        .label-input::placeholder { color: #374151; }
+
+        /* ── Carrier selector buttons ── */
+        .override-label { color: #6b7280; font-size: 0.8em; margin-bottom: 8px; }
+        .carrier-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+        .carrier-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            padding: 7px 14px;
+            color: #9ca3af;
+            font-size: 0.84em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .carrier-btn:hover { border-color: #4ade80; color: #e0e0e0; }
+        .carrier-btn.active {
+            background: rgba(74,222,128,0.1);
+            border-color: #4ade80;
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        /* ── History table ── */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .history-header h2 { margin-bottom: 0; }
+
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.87em; }
+        .history-table th {
+            color: #6b7280;
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            font-weight: 500;
+        }
+        .history-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: middle;
+        }
+        .history-table tr:last-child td { border-bottom: none; }
+        .history-table tr:hover td { background: rgba(74,222,128,0.03); }
+
+        .mono {
+            font-family: 'Courier New', monospace;
+            color: #4ade80;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .mono:hover { text-decoration: underline; }
+
+        .btn-sm {
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.25);
+            border-radius: 5px;
+            color: #4ade80;
+            padding: 4px 9px;
+            font-size: 0.78em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-sm:hover { background: rgba(74,222,128,0.18); }
+        .btn-sm.del {
+            background: rgba(248,113,113,0.06);
+            border-color: rgba(248,113,113,0.2);
+            color: #f87171;
+        }
+        .btn-sm.del:hover { background: rgba(248,113,113,0.15); }
+
+        .empty-state {
+            text-align: center;
+            padding: 28px;
+            color: #4b5563;
+            font-size: 0.9em;
+        }
+
+        /* ── Carrier quick-link grid ── */
+        .carrier-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+        }
+        .carrier-link {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 8px;
+            padding: 16px 12px;
+            text-align: center;
+            text-decoration: none;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .carrier-link:hover {
+            border-color: rgba(74,222,128,0.5);
+            background: rgba(74,222,128,0.05);
+            transform: translateY(-2px);
+        }
+        .cl-icon { font-size: 1.9em; }
+        .cl-name { font-size: 0.88em; font-weight: 600; }
+        .cl-url  { font-size: 0.7em; color: #6b7280; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            background: rgba(74,222,128,0.92);
+            color: #0f3460;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88em;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 999;
+        }
+        .toast.show { opacity: 1; }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #4b5563;
+            font-size: 0.8em;
+        }
+        .footer a { color: #4ade80; text-decoration: none; }
+
+        @media (max-width: 580px) {
+            .track-input-group { flex-direction: column; }
+            .history-table th:nth-child(1),
+            .history-table td:nth-child(1) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>&#127807; Green Tools</h1>
+    <p>Package Tracker &bull; <span id="currentTime"></span></p>
+</div>
+
+<div class="container">
+
+    <!-- ── Main tracker card ── -->
+    <div class="card">
+        <h2><span class="icon">&#128230;</span> Track a Package</h2>
+
+        <div class="track-input-group">
+            <input type="text" id="trackingInput" class="track-input"
+                   placeholder="Paste or type your tracking number..."
+                   oninput="onTrackingInput()"
+                   onkeydown="if(event.key==='Enter') trackPackage()">
+            <button class="btn-track" onclick="trackPackage()">&#128269;&nbsp;Track</button>
+        </div>
+
+        <div class="detect-row">
+            <span class="detect-label">Carrier detected:</span>
+            <span id="detectedBadge" class="carrier-badge badge-unknown">—</span>
+        </div>
+
+        <div class="label-row">
+            <input type="text" id="labelInput" class="label-input"
+                   placeholder="Optional label  (e.g. Amazon Order, Office Chair, Mom's Gift...)">
+        </div>
+
+        <div class="override-label">Override carrier:</div>
+        <div class="carrier-selector">
+            <button class="carrier-btn" data-c="ups"     onclick="selectCarrier('ups')">&#128234; UPS</button>
+            <button class="carrier-btn" data-c="usps"    onclick="selectCarrier('usps')">&#127968; USPS</button>
+            <button class="carrier-btn" data-c="fedex"   onclick="selectCarrier('fedex')">&#128230; FedEx</button>
+            <button class="carrier-btn" data-c="dhl"     onclick="selectCarrier('dhl')">&#128666; DHL</button>
+            <button class="carrier-btn" data-c="airways" onclick="selectCarrier('airways')">&#9992; Airways</button>
+            <button class="carrier-btn" data-c="amazon"  onclick="selectCarrier('amazon')">&#128722; Amazon</button>
+        </div>
+    </div>
+
+    <!-- ── History ── -->
+    <div class="card">
+        <div class="history-header">
+            <h2><span class="icon">&#128203;</span> Tracking History</h2>
+            <button class="btn-sm del" onclick="clearHistory()">Clear All</button>
+        </div>
+        <div id="historyContainer">
+            <div class="empty-state">No packages tracked yet — enter a tracking number above to get started.</div>
+        </div>
+    </div>
+
+    <!-- ── Carrier quick-links ── -->
+    <div class="card">
+        <h2><span class="icon">&#128279;</span> Carrier Tracking Pages</h2>
+        <div class="carrier-grid">
+            <a class="carrier-link" href="https://www.ups.com/track" target="_blank" rel="noopener">
+                <span class="cl-icon">&#128234;</span>
+                <span class="cl-name">UPS</span>
+                <span class="cl-url">ups.com/track</span>
+            </a>
+            <a class="carrier-link" href="https://tools.usps.com/go/TrackConfirmAction" target="_blank" rel="noopener">
+                <span class="cl-icon">&#127968;</span>
+                <span class="cl-name">USPS</span>
+                <span class="cl-url">usps.com/track</span>
+            </a>
+            <a class="carrier-link" href="https://www.fedex.com/fedextrack/" target="_blank" rel="noopener">
+                <span class="cl-icon">&#128230;</span>
+                <span class="cl-name">FedEx</span>
+                <span class="cl-url">fedex.com/track</span>
+            </a>
+            <a class="carrier-link" href="https://www.dhl.com/us-en/home/tracking.html" target="_blank" rel="noopener">
+                <span class="cl-icon">&#128666;</span>
+                <span class="cl-name">DHL</span>
+                <span class="cl-url">dhl.com/tracking</span>
+            </a>
+            <a class="carrier-link" href="https://www.track-trace.com/aircargo" target="_blank" rel="noopener">
+                <span class="cl-icon">&#9992;</span>
+                <span class="cl-name">Airways</span>
+                <span class="cl-url">track-trace.com</span>
+            </a>
+            <a class="carrier-link" href="https://track.amazon.com" target="_blank" rel="noopener">
+                <span class="cl-icon">&#128722;</span>
+                <span class="cl-name">Amazon</span>
+                <span class="cl-url">track.amazon.com</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    Green Tools &bull; <a href="https://github.com/GreenHornet-Dev/green-tools" target="_blank">github.com/GreenHornet-Dev/green-tools</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Carrier definitions ──────────────────────────────────────────────────────
+const CARRIERS = {
+    amazon: {
+        name: 'Amazon',
+        badge: 'badge-amazon',
+        patterns: [/^TBA\d{9,}$/i],
+        url: n => `https://track.amazon.com/tracking/${n}`
+    },
+    ups: {
+        name: 'UPS',
+        badge: 'badge-ups',
+        patterns: [
+            /^1Z[A-Z0-9]{16}$/i,
+            /^T[0-9]{10}$/,
+            /^[0-9]{18}$/
+        ],
+        url: n => `https://www.ups.com/track?tracknum=${n}`
+    },
+    usps: {
+        name: 'USPS',
+        badge: 'badge-usps',
+        patterns: [
+            /^9[0-4][0-9]{20}$/,
+            /^[A-Z]{2}[0-9]{9}[A-Z]{2}$/i,
+            /^[0-9]{22}$/
+        ],
+        url: n => `https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1=${n}`
+    },
+    dhl: {
+        name: 'DHL',
+        badge: 'badge-dhl',
+        patterns: [
+            /^JD[0-9]{18}$/i,
+            /^[0-9]{10}$/,
+            /^[0-9]{11}$/
+        ],
+        url: n => `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${n}`
+    },
+    airways: {
+        name: 'Airways',
+        badge: 'badge-airways',
+        patterns: [
+            /^[0-9]{3}-[0-9]{8}$/,
+            /^[0-9]{3} [0-9]{8}$/,
+            /^[0-9]{11}$/
+        ],
+        url: n => `https://www.track-trace.com/aircargo#${n.replace(/\s/, '-')}`
+    },
+    fedex: {
+        name: 'FedEx',
+        badge: 'badge-fedex',
+        patterns: [
+            /^96[0-9]{18}$/,
+            /^DT[0-9]{12}$/i,
+            /^[0-9]{20}$/,
+            /^[0-9]{15}$/,
+            /^[0-9]{12}$/
+        ],
+        url: n => `https://www.fedex.com/fedextrack/?tracknumbers=${n}`
+    }
+};
+
+// Detection order: most-specific first to avoid false positives
+const DETECT_ORDER = ['amazon', 'ups', 'usps', 'dhl', 'airways', 'fedex'];
+
+// ── State ────────────────────────────────────────────────────────────────────
+let detectedCarrier = null;
+let selectedCarrier = null;   // manual override
+
+// ── Detection ────────────────────────────────────────────────────────────────
+function onTrackingInput() {
+    selectedCarrier = null;
+    updateCarrierButtons(null);
+    const raw = document.getElementById('trackingInput').value.trim().replace(/\s+/g, '');
+    detectedCarrier = null;
+    for (const key of DETECT_ORDER) {
+        for (const pat of CARRIERS[key].patterns) {
+            if (pat.test(raw)) { detectedCarrier = key; break; }
+        }
+        if (detectedCarrier) break;
+    }
+    renderBadge(detectedCarrier);
+}
+
+function renderBadge(key) {
+    const el = document.getElementById('detectedBadge');
+    if (!key) {
+        el.className = 'carrier-badge badge-unknown';
+        el.textContent = '—';
+    } else {
+        el.className = `carrier-badge ${CARRIERS[key].badge}`;
+        el.textContent = CARRIERS[key].name;
+    }
+}
+
+// ── Manual override ───────────────────────────────────────────────────────────
+function selectCarrier(key) {
+    selectedCarrier = (selectedCarrier === key) ? null : key;
+    updateCarrierButtons(selectedCarrier);
+    renderBadge(selectedCarrier || detectedCarrier);
+}
+
+function updateCarrierButtons(active) {
+    document.querySelectorAll('.carrier-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.c === active);
+    });
+}
+
+// ── Track ─────────────────────────────────────────────────────────────────────
+function trackPackage() {
+    const raw   = document.getElementById('trackingInput').value.trim();
+    const clean = raw.replace(/\s+/g, '');
+    if (!clean) { showToast('Enter a tracking number first'); return; }
+
+    const carrier = selectedCarrier || detectedCarrier;
+    if (!carrier) {
+        showToast('Select a carrier using the buttons below');
+        return;
+    }
+
+    const label = document.getElementById('labelInput').value.trim();
+    saveEntry(clean, carrier, label);
+    window.open(CARRIERS[carrier].url(clean), '_blank', 'noopener');
+    showToast('Opening ' + CARRIERS[carrier].name + ' tracking…');
+}
+
+// ── History (localStorage) ────────────────────────────────────────────────────
+function getHistory() {
+    try { return JSON.parse(localStorage.getItem('gt_pkg_history') || '[]'); }
+    catch { return []; }
+}
+
+function saveEntry(tracking, carrier, label) {
+    const hist = getHistory().filter(h => h.tracking !== tracking);
+    hist.unshift({ tracking, carrier, label: label || '', ts: Date.now() });
+    if (hist.length > 60) hist.length = 60;
+    localStorage.setItem('gt_pkg_history', JSON.stringify(hist));
+    renderHistory();
+}
+
+function removeEntry(tracking) {
+    const hist = getHistory().filter(h => h.tracking !== tracking);
+    localStorage.setItem('gt_pkg_history', JSON.stringify(hist));
+    renderHistory();
+}
+
+function clearHistory() {
+    if (!confirm('Clear all tracking history?')) return;
+    localStorage.removeItem('gt_pkg_history');
+    renderHistory();
+}
+
+function renderHistory() {
+    const hist = getHistory();
+    const el   = document.getElementById('historyContainer');
+    if (!hist.length) {
+        el.innerHTML = '<div class="empty-state">No packages tracked yet &mdash; enter a tracking number above to get started.</div>';
+        return;
+    }
+
+    const rows = hist.map(h => {
+        const c    = CARRIERS[h.carrier] || { name: h.carrier, badge: 'badge-unknown' };
+        const date = new Date(h.ts).toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        const esc = s => s.replace(/'/g, "\\'");
+        return `<tr>
+            <td style="color:#6b7280;font-size:0.8em;white-space:nowrap;">${date}</td>
+            <td><span class="mono" title="Click to reuse" onclick="reuseEntry('${esc(h.tracking)}','${h.carrier}')">${h.tracking}</span></td>
+            <td><span class="carrier-badge ${c.badge}" style="font-size:0.77em;">${c.name}</span></td>
+            <td style="color:#9ca3af;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(h.label)}">${h.label || '<span style="color:#374151">—</span>'}</td>
+            <td style="white-space:nowrap;">
+                <button class="btn-sm" onclick="openEntry('${esc(h.tracking)}','${h.carrier}')">Track</button>
+                <button class="btn-sm del" style="margin-left:5px;" onclick="removeEntry('${esc(h.tracking)}')">&#10005;</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    el.innerHTML = `
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Tracking #</th>
+                    <th>Carrier</th>
+                    <th>Label</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+function openEntry(tracking, carrier) {
+    if (!CARRIERS[carrier]) return;
+    window.open(CARRIERS[carrier].url(tracking), '_blank', 'noopener');
+}
+
+function reuseEntry(tracking, carrier) {
+    document.getElementById('trackingInput').value = tracking;
+    detectedCarrier = carrier;
+    selectedCarrier = null;
+    updateCarrierButtons(null);
+    renderBadge(carrier);
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+function tick() { document.getElementById('currentTime').textContent = new Date().toLocaleString(); }
+tick();
+setInterval(tick, 1000);
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderHistory();
+</script>
+
+</body>
+</html>
